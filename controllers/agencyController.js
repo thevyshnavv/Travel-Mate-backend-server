@@ -1,4 +1,5 @@
 import Agency from '../models/Agency.js';
+import TravelPackage from '../models/TravelPackage.js';
 
 // @route  POST /api/v1/agencies
 // @access Private (agency role only)
@@ -153,6 +154,78 @@ export const getMyAgency = async (req, res) => {
     }
 
     res.status(200).json({ success: true, agency });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// @route  POST /api/v1/agencies/packages
+// @access Private (agency role)
+export const createPackage = async (req, res) => {
+  try {
+    const { packageName, description, destination_country, destination_city, duration_days, duration_nights, pricePerPerson, maxGroupSize, minGroupSize, included } = req.body;
+
+    let images = [];
+    if (req.files) {
+      images = req.files.map(f => `/uploads/${f.filename}`);
+    }
+
+    const pkg = await TravelPackage.create({
+      agencyId: req.user.id,
+      packageName,
+      description,
+      destination_country,
+      destination_city,
+      duration_days: Number(duration_days),
+      duration_nights: Number(duration_nights),
+      pricePerPerson: Number(pricePerPerson),
+      maxGroupSize: Number(maxGroupSize || 10),
+      minGroupSize: Number(minGroupSize || 1),
+      included: included ? (Array.isArray(included) ? included : included.split(',').map(s => s.trim())) : [],
+      images
+    });
+
+    res.status(201).json({ success: true, message: 'Travel package created successfully', package: pkg });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// @route  GET /api/v1/agencies/:id/packages
+// @access Public
+export const getAgencyPackages = async (req, res) => {
+  try {
+    const packages = await TravelPackage.find({ agencyId: req.params.id });
+    res.status(200).json({ success: true, count: packages.length, packages });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// @route  GET /api/v1/agencies/packages/my-packages
+// @access Private (agency role)
+export const getMyPackages = async (req, res) => {
+  try {
+    const packages = await TravelPackage.find({ agencyId: req.user.id });
+    res.status(200).json({ success: true, count: packages.length, packages });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// @route  DELETE /api/v1/agencies/packages/:id
+// @access Private (agency role)
+export const deletePackage = async (req, res) => {
+  try {
+    const pkg = await TravelPackage.findById(req.params.id);
+    if (!pkg) {
+      return res.status(404).json({ success: false, message: 'Package not found' });
+    }
+    if (pkg.agencyId.toString() !== req.user.id.toString()) {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+    await TravelPackage.findByIdAndDelete(req.params.id);
+    res.status(200).json({ success: true, message: 'Package deleted successfully' });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

@@ -39,7 +39,7 @@ const taxiProviderSchema = new mongoose.Schema({
     model: String,
     registrationNumber: String,
     capacity: Number,
-    type: String,
+    type: { type: String },
     image: String
   }],
   drivers: [{

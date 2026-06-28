@@ -20,6 +20,10 @@ const userSchema = new mongoose.Schema({
         minlength: [6, 'Password must be at least 6 characters long'],
         select: false
     },
+    phone: {
+        type: String,
+        default: ''
+    },
     role: {
         type: String,
         enum: ['traveler', 'agency', 'taxi_provider', 'admin'],
@@ -37,11 +41,23 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    isBlock: {
+        type: Boolean,
+        default: false
+    },
     isActive: {
         type: Boolean,
         default: true,
     },
-})
+    averageRating: {
+        type: Number,
+        default: 0
+    },
+    totalReviews: {
+        type: Number,
+        default: 0
+    }
+}, { timestamps: true });
 
 // Hash password before saving
 userSchema.pre('save', async function () {

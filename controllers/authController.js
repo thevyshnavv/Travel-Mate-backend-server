@@ -1,5 +1,7 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
+import Agency from '../models/Agency.js';
+import TaxiProvider from '../models/TaxiProvider.js';
 
 // Generate JWT token
 const generateToken = (id) => {
@@ -9,7 +11,7 @@ const generateToken = (id) => {
 // @route  POST /api/v1/auth/register
 export const register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, phone } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -18,7 +20,28 @@ export const register = async (req, res) => {
     }
 
     // Create user
-    const user = await User.create({ name, email, password, role });
+    const user = await User.create({ name, email, password, role, phone });
+
+    // Auto-create initial profile for agencies or taxi providers
+    if (role === 'agency') {
+      await Agency.create({
+        userId: user._id,
+        agencyName: `${user.name} Travel Agency`,
+        email: user.email,
+        phone: phone || '000-000-0000',
+        location: { country: '', city: '', address: '' },
+        isVerified: true
+      });
+    } else if (role === 'taxi_provider') {
+      await TaxiProvider.create({
+        userId: user._id,
+        businessName: `${user.name} Taxi Service`,
+        email: user.email,
+        phone: phone || '000-000-0000',
+        location: { country: '', city: '', address: '' },
+        isVerified: true
+      });
+    }
 
     const token = generateToken(user._id);
 
@@ -30,6 +53,7 @@ export const register = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone,
         role: user.role,
         avatar: user.avatar,
       },
@@ -66,6 +90,8 @@ export const login = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone || '',
+        bio: user.bio || '',
         role: user.role,
         avatar: user.avatar,
       },
