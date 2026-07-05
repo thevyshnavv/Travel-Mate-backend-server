@@ -30,6 +30,19 @@ export const createBooking = async (req, res) => {
       status: 'Pending'
     });
 
+    if (bookingType === 'taxi') {
+      const taxiProvider = await TaxiProvider.findById(packageOrServiceId);
+      if (taxiProvider) {
+        const io = req.app.get('io');
+        if (io) {
+          io.to(taxiProvider.userId.toString()).emit('new_taxi_booking', {
+            message: 'You have a new taxi booking!',
+            booking
+          });
+        }
+      }
+    }
+
     res.status(201).json({
       success: true,
       message: 'Booking created successfully',
