@@ -213,6 +213,49 @@ export const getMyPackages = async (req, res) => {
   }
 };
 
+// @route  PUT /api/v1/agencies/packages/:id
+// @access Private (agency role)
+export const updatePackage = async (req, res) => {
+  try {
+    const pkg = await TravelPackage.findById(req.params.id);
+    if (!pkg) {
+      return res.status(404).json({ success: false, message: 'Package not found' });
+    }
+    if (pkg.agencyId.toString() !== req.user.id.toString()) {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+
+    const { packageName, description, destination_country, destination_city, duration_days, duration_nights, pricePerPerson, maxGroupSize, minGroupSize, included } = req.body;
+
+    let images = pkg.images || [];
+    if (req.files && req.files.length > 0) {
+      // Append new images
+      const newImages = req.files.map(f => `/uploads/${f.filename}`);
+      images = [...images, ...newImages];
+    }
+
+    const updatedData = {
+      packageName: packageName || pkg.packageName,
+      description: description || pkg.description,
+      destination_country: destination_country || pkg.destination_country,
+      destination_city: destination_city || pkg.destination_city,
+      duration_days: duration_days ? Number(duration_days) : pkg.duration_days,
+      duration_nights: duration_nights ? Number(duration_nights) : pkg.duration_nights,
+      pricePerPerson: pricePerPerson ? Number(pricePerPerson) : pkg.pricePerPerson,
+      maxGroupSize: maxGroupSize ? Number(maxGroupSize) : pkg.maxGroupSize,
+      minGroupSize: minGroupSize ? Number(minGroupSize) : pkg.minGroupSize,
+      included: included ? (Array.isArray(included) ? included : included.split(',').map(s => s.trim())) : pkg.included,
+      images
+    };
+
+    const updatedPkg = await TravelPackage.findByIdAndUpdate(req.params.id, updatedData, { new: true, runValidators: true });
+
+    res.status(200).json({ success: true, message: 'Package updated successfully', package: updatedPkg });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 // @route  DELETE /api/v1/agencies/packages/:id
 // @access Private (agency role)
 export const deletePackage = async (req, res) => {
@@ -226,6 +269,43 @@ export const deletePackage = async (req, res) => {
     }
     await TravelPackage.findByIdAndDelete(req.params.id);
     res.status(200).json({ success: true, message: 'Package deleted successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// @route  GET /api/v1/agencies/packages/all
+// @access Public
+export const getAllPackages = async (req, res) => {
+  try {
+    const { place, page = 1, limit = 20 } = req.query;
+    
+    const filter = {};
+    if (place) {
+      filter.$or = [
+        { destination_city: { $regex: place, $options: 'i' } },
+        { destination_country: { $regex: place, $options: 'i' } }
+      ];
+    }
+
+    const skip = (page - 1) * limit;
+
+    const packages = await TravelPackage.find(filter)
+      .populate('agencyId', 'agencyName logo location') // Need to populate agency info
+      .skip(skip)
+      .limit(Number(limit))
+      .sort({ createdAt: -1 });
+
+    const total = await TravelPackage.countDocuments(filter);
+
+    res.status(200).json({ 
+      success: true, 
+      count: packages.length, 
+      total,
+      page: Number(page),
+      pages: Math.ceil(total / limit),
+      packages 
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

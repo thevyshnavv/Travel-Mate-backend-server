@@ -30,14 +30,29 @@ export const createBooking = async (req, res) => {
       status: 'Pending'
     });
 
+    const populatedBooking = await Booking.findById(booking._id)
+      .populate('travelerId', 'name email phone avatar')
+      .populate('packageOrServiceId');
+
     if (bookingType === 'taxi') {
       const taxiProvider = await TaxiProvider.findById(packageOrServiceId);
       if (taxiProvider) {
         const io = req.app.get('io');
         if (io) {
           io.to(taxiProvider.userId.toString()).emit('new_taxi_booking', {
-            message: 'You have a new taxi booking!',
-            booking
+            message: 'You have a new taxi booking request!',
+            booking: populatedBooking
+          });
+        }
+      }
+    } else if (bookingType === 'package') {
+      const travelPackage = await TravelPackage.findById(packageOrServiceId);
+      if (travelPackage) {
+        const io = req.app.get('io');
+        if (io) {
+          io.to(travelPackage.agencyId.toString()).emit('new_package_booking', {
+            message: 'You have a new package booking!',
+            booking: populatedBooking
           });
         }
       }

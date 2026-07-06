@@ -9,12 +9,17 @@ import {
   createPackage,
   getAgencyPackages,
   getMyPackages,
-  deletePackage
+  deletePackage,
+  updatePackage,
+  getAllPackages
 } from '../controllers/agencyController.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
 import upload from '../middleware/upload.js';
 
 const router = express.Router();
+
+// Packages global routes (put before /:id)
+router.get('/packages/all', getAllPackages);
 
 // Public routes
 router.get('/', getAllAgencies);
@@ -27,8 +32,10 @@ router.put('/:id', protect, authorize('agency'), upload.fields([{ name: 'logo', 
 router.delete('/:id', protect, authorize('agency'), deleteAgency);
 router.get('/user/my-agency', protect, getMyAgency);
 
-// Packages routes
+// Packages protected routes
 router.post('/packages', protect, authorize('agency'), upload.array('images', 5), createPackage);
 router.get('/packages/my-packages', protect, authorize('agency'), getMyPackages);
+router.put('/packages/:id', protect, authorize('agency'), upload.array('images', 5), updatePackage);
 router.delete('/packages/:id', protect, authorize('agency'), deletePackage);
+
 export default router;
