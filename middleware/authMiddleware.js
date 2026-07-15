@@ -15,6 +15,9 @@ export const protect = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = await User.findById(decoded.id);
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: 'User belonging to this token no longer exists' });
+    }
     next();
   } catch (err) {
     res.status(401).json({ success: false, message: 'Token invalid or expired' });

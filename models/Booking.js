@@ -24,7 +24,7 @@ const bookingSchema = new mongoose.Schema({
   bookingTypeModel: {
     type: String,
     required: true,
-    enum: ['TravelPackage', 'TaxiProvider']
+    enum: ['TravelPackage', 'User']
   },
   bookingDate: {
     type: Date,
@@ -32,7 +32,7 @@ const bookingSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['Pending', 'Confirmed', 'Cancelled'],
+    enum: ['Pending', 'Confirmed', 'Cancelled', 'pending', 'confirmed', 'paid', 'cancelled'],
     default: 'Pending'
   },
   totalPrice: {
@@ -41,8 +41,12 @@ const bookingSchema = new mongoose.Schema({
   },
   paymentStatus: {
     type: String,
-    enum: ['Pending', 'Paid', 'Failed'],
+    enum: ['Pending', 'Paid', 'Failed', 'pending', 'completed'],
     default: 'Pending'
+  },
+  reminderSent: {
+    type: Boolean,
+    default: false
   },
   paymentMethod: {
     type: String,

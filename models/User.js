@@ -56,6 +56,72 @@ const userSchema = new mongoose.Schema({
     totalReviews: {
         type: Number,
         default: 0
+    },
+    businessName: {
+        type: String,
+        trim: true
+    },
+    businessEmail: {
+        type: String,
+        trim: true,
+        lowercase: true
+    },
+    location: {
+        country: { type: String, default: '' },
+        city: { type: String, default: '' },
+        address: { type: String, default: '' }
+    },
+    serviceArea: {
+        type: [String],
+        default: []
+    },
+    vehicleTypes: {
+        type: [String],
+        default: ['sedan']
+    },
+    pricePerKm: {
+        type: Number,
+        default: 0
+    },
+    basePrice: {
+        type: Number,
+        default: 0
+    },
+    operatingHours: {
+        open: { type: String, default: '00:00' },
+        close: { type: String, default: '23:59' }
+    },
+    availability: {
+        type: Boolean,
+        default: true
+    },
+    agencyName: {
+        type: String,
+        trim: true
+    },
+    specialties: {
+        type: [String],
+        default: ['general tour']
+    },
+    website: {
+        type: String,
+        trim: true
+    },
+    logo: {
+        type: String,
+        default: ''
+    },
+    coverImage: {
+        type: String,
+        default: ''
+    },
+    priceRange: {
+        min: { type: Number, default: 0 },
+        max: { type: Number, default: 0 }
+    },
+    isFeatured: {
+        type: Boolean,
+        default: false
     }
 }, { timestamps: true });
 

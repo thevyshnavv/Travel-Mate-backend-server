@@ -1,5 +1,34 @@
-import Agency from '../models/Agency.js';
+import User from '../models/User.js';
 import TravelPackage from '../models/TravelPackage.js';
+
+// Helper function to build the agency response object expected by the UI
+const buildAgencyResponse = (user) => {
+  return {
+    _id: user._id,
+    userId: {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      avatar: user.avatar || ''
+    },
+    agencyName: user.agencyName || user.businessName || `${user.name} Travel Agency`,
+    description: user.description || user.bio || '',
+    location: user.location || { country: '', city: '', address: '' },
+    specialties: user.specialties || ['general tour'],
+    phone: user.phone || '',
+    email: user.businessEmail || user.email || '',
+    website: user.website || '',
+    logo: user.logo || '',
+    coverImage: user.coverImage || '',
+    priceRange: user.priceRange || { min: 0, max: 0 },
+    rating: user.averageRating || 0,
+    reviewCount: user.totalReviews || 0,
+    isVerified: user.isVerified || false,
+    isFeatured: user.isFeatured || false,
+    createdAt: user.createdAt,
+    updatedAt: user.updatedAt
+  };
+};
 
 // @route  POST /api/v1/agencies
 // @access Private (agency role only)
@@ -7,23 +36,19 @@ export const createAgency = async (req, res) => {
   try {
     const { agencyName, description, specialties, location, phone, website, email, priceRange } = req.body;
 
-    // Check if user already has an agency
-    const existingAgency = await Agency.findOne({ userId: req.user.id });
-    if (existingAgency) {
-      return res.status(400).json({ success: false, message: 'You already have an agency listing' });
-    }
-
-    const agency = await Agency.create({
-      userId: req.user.id,
+    const user = await User.findByIdAndUpdate(req.user.id, {
       agencyName,
       description,
-      specialties,
+      specialties: specialties ? (Array.isArray(specialties) ? specialties : specialties.split(',').map(s => s.trim())) : ['general tour'],
       location,
       phone,
       website,
-      email,
-      priceRange
-    });
+      businessEmail: email,
+      priceRange,
+      isVerified: true
+    }, { new: true });
+
+    const agency = buildAgencyResponse(user);
 
     res.status(201).json({
       success: true,
@@ -41,28 +66,27 @@ export const getAllAgencies = async (req, res) => {
   try {
     const { country, city, minPrice, maxPrice, specialty, rating, page = 1, limit = 10 } = req.query;
 
-    // Build filter object
-    const filter = { isVerified: true };
+    const filter = { role: 'agency', isActive: true };
     
     if (country) filter['location.country'] = { $regex: country, $options: 'i' };
     if (city) filter['location.city'] = { $regex: city, $options: 'i' };
     if (specialty) filter.specialties = specialty;
     if (minPrice || maxPrice) {
-      filter['priceRange.min'] = {};
-      if (minPrice) filter['priceRange.min'].$gte = Number(minPrice);
+      if (minPrice) filter['priceRange.min'] = { $gte: Number(minPrice) };
       if (maxPrice) filter['priceRange.max'] = { $lte: Number(maxPrice) };
     }
-    if (rating) filter.rating = { $gte: Number(rating) };
+    if (rating) filter.averageRating = { $gte: Number(rating) };
 
     const skip = (page - 1) * limit;
 
-    const agencies = await Agency.find(filter)
-      .populate('userId', 'name email avatar')
+    const users = await User.find(filter)
       .skip(skip)
       .limit(Number(limit))
-      .sort({ rating: -1 });
+      .sort({ averageRating: -1 });
 
-    const total = await Agency.countDocuments(filter);
+    const total = await User.countDocuments(filter);
+
+    const agencies = users.map(u => buildAgencyResponse(u));
 
     res.status(200).json({
       success: true,
@@ -81,12 +105,13 @@ export const getAllAgencies = async (req, res) => {
 // @access Public
 export const getAgencyById = async (req, res) => {
   try {
-    const agency = await Agency.findById(req.params.id)
-      .populate('userId', 'name email avatar');
+    const user = await User.findOne({ _id: req.params.id, role: 'agency' });
 
-    if (!agency) {
+    if (!user) {
       return res.status(404).json({ success: false, message: 'Agency not found' });
     }
+
+    const agency = buildAgencyResponse(user);
 
     res.status(200).json({ success: true, agency });
   } catch (err) {
@@ -98,21 +123,37 @@ export const getAgencyById = async (req, res) => {
 // @access Private (owner only)
 export const updateAgency = async (req, res) => {
   try {
-    let agency = await Agency.findById(req.params.id);
-
-    if (!agency) {
-      return res.status(404).json({ success: false, message: 'Agency not found' });
-    }
-
-    // Check if user is the owner
-    if (agency.userId.toString() !== req.user.id.toString()) {
+    if (req.params.id.toString() !== req.user.id.toString()) {
       return res.status(403).json({ success: false, message: 'Not authorized to update this agency' });
     }
 
-    agency = await Agency.findByIdAndUpdate(req.params.id, req.body, {
+    const updateFields = { ...req.body };
+    
+    // Handle file uploads (logo and coverImage)
+    if (req.files) {
+      if (req.files.logo && req.files.logo.length > 0) {
+        updateFields.logo = `/uploads/${req.files.logo[0].filename}`;
+      }
+      if (req.files.coverImage && req.files.coverImage.length > 0) {
+        updateFields.coverImage = `/uploads/${req.files.coverImage[0].filename}`;
+      }
+    }
+
+    if (updateFields.email) {
+      updateFields.businessEmail = updateFields.email;
+      delete updateFields.email;
+    }
+
+    const user = await User.findByIdAndUpdate(req.user.id, updateFields, {
       new: true,
       runValidators: true
     });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Agency not found' });
+    }
+
+    const agency = buildAgencyResponse(user);
 
     res.status(200).json({ success: true, message: 'Agency updated', agency });
   } catch (err) {
@@ -124,18 +165,22 @@ export const updateAgency = async (req, res) => {
 // @access Private (owner only)
 export const deleteAgency = async (req, res) => {
   try {
-    const agency = await Agency.findById(req.params.id);
-
-    if (!agency) {
-      return res.status(404).json({ success: false, message: 'Agency not found' });
-    }
-
-    // Check if user is the owner
-    if (agency.userId.toString() !== req.user.id.toString()) {
+    if (req.params.id.toString() !== req.user.id.toString()) {
       return res.status(403).json({ success: false, message: 'Not authorized to delete this agency' });
     }
 
-    await Agency.findByIdAndDelete(req.params.id);
+    await User.findByIdAndUpdate(req.user.id, {
+      $unset: {
+        agencyName: 1,
+        specialties: 1,
+        website: 1,
+        logo: 1,
+        coverImage: 1,
+        priceRange: 1,
+        isFeatured: 1,
+        location: 1
+      }
+    });
 
     res.status(200).json({ success: true, message: 'Agency deleted successfully' });
   } catch (err) {
@@ -147,11 +192,13 @@ export const deleteAgency = async (req, res) => {
 // @access Private
 export const getMyAgency = async (req, res) => {
   try {
-    const agency = await Agency.findOne({ userId: req.user.id });
+    const user = await User.findOne({ _id: req.user.id, role: 'agency' });
 
-    if (!agency) {
+    if (!user) {
       return res.status(404).json({ success: false, message: 'You have no agency listing' });
     }
+
+    const agency = buildAgencyResponse(user);
 
     res.status(200).json({ success: true, agency });
   } catch (err) {
@@ -229,7 +276,6 @@ export const updatePackage = async (req, res) => {
 
     let images = pkg.images || [];
     if (req.files && req.files.length > 0) {
-      // Append new images
       const newImages = req.files.map(f => `/uploads/${f.filename}`);
       images = [...images, ...newImages];
     }
@@ -291,7 +337,7 @@ export const getAllPackages = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const packages = await TravelPackage.find(filter)
-      .populate('agencyId', 'agencyName logo location') // Need to populate agency info
+      .populate('agencyId', 'agencyName logo location')
       .skip(skip)
       .limit(Number(limit))
       .sort({ createdAt: -1 });
@@ -305,6 +351,29 @@ export const getAllPackages = async (req, res) => {
       page: Number(page),
       pages: Math.ceil(total / limit),
       packages 
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// @route  GET /api/v1/agencies/packages/detail/:id
+// @access Public
+export const getPackageById = async (req, res) => {
+  try {
+    const pkg = await TravelPackage.findById(req.params.id);
+    
+    if (!pkg) {
+      return res.status(404).json({ success: false, message: 'Package not found' });
+    }
+
+    const user = await User.findOne({ _id: pkg.agencyId, role: 'agency' });
+    const agency = user ? buildAgencyResponse(user) : null;
+
+    res.status(200).json({ 
+      success: true, 
+      package: pkg,
+      agency
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

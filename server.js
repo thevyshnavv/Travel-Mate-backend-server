@@ -6,6 +6,8 @@ import { fileURLToPath } from 'url';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import connectDB from './config/db.js';
+import { initPaymentReminderJob } from './jobs/reminderJob.js';
+import { initCancelBookingJob } from './jobs/cancelBookingJob.js';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import agencyRoutes from './routes/agencyRoutes.js';
@@ -16,6 +18,10 @@ import paymentRoutes from './routes/paymentRoutes.js';
 
 dotenv.config();
 connectDB();
+
+// Initialize automated scheduled jobs
+initPaymentReminderJob();
+initCancelBookingJob();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

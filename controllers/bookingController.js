@@ -1,6 +1,6 @@
 import Booking from '../models/Booking.js';
 import TravelPackage from '../models/TravelPackage.js';
-import TaxiProvider from '../models/TaxiProvider.js';
+import User from '../models/User.js';
 
 // @route  POST /api/v1/bookings
 // @access Private (traveler role)
@@ -13,7 +13,7 @@ export const createBooking = async (req, res) => {
     }
 
     const bookingNumber = 'BK-' + Date.now().toString() + Math.floor(Math.random() * 1000);
-    const bookingTypeModel = bookingType === 'package' ? 'TravelPackage' : 'TaxiProvider';
+    const bookingTypeModel = bookingType === 'package' ? 'TravelPackage' : 'User';
 
     const booking = await Booking.create({
       bookingNumber,
@@ -35,11 +35,11 @@ export const createBooking = async (req, res) => {
       .populate('packageOrServiceId');
 
     if (bookingType === 'taxi') {
-      const taxiProvider = await TaxiProvider.findById(packageOrServiceId);
+      const taxiProvider = await User.findById(packageOrServiceId);
       if (taxiProvider) {
         const io = req.app.get('io');
         if (io) {
-          io.to(taxiProvider.userId.toString()).emit('new_taxi_booking', {
+          io.to(taxiProvider._id.toString()).emit('new_taxi_booking', {
             message: 'You have a new taxi booking request!',
             booking: populatedBooking
           });
@@ -89,14 +89,11 @@ export const getMyBookings = async (req, res) => {
         .populate('packageOrServiceId')
         .sort({ createdAt: -1 });
     } else if (role === 'taxi_provider') {
-      // Find booking for this taxi provider
-      const provider = await TaxiProvider.findOne({ userId: req.user.id });
-      if (provider) {
-        bookings = await Booking.find({ packageOrServiceId: provider._id })
-          .populate('travelerId', 'name email phone avatar')
-          .populate('packageOrServiceId')
-          .sort({ createdAt: -1 });
-      }
+      // Find bookings for this taxi provider (where packageOrServiceId is the provider user ID)
+      bookings = await Booking.find({ packageOrServiceId: req.user.id })
+        .populate('travelerId', 'name email phone avatar')
+        .populate('packageOrServiceId')
+        .sort({ createdAt: -1 });
     }
 
     res.status(200).json({

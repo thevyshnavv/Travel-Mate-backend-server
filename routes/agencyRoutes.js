@@ -11,7 +11,8 @@ import {
   getMyPackages,
   deletePackage,
   updatePackage,
-  getAllPackages
+  getAllPackages,
+  getPackageById
 } from '../controllers/agencyController.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
 import upload from '../middleware/upload.js';
@@ -20,6 +21,7 @@ const router = express.Router();
 
 // Packages global routes (put before /:id)
 router.get('/packages/all', getAllPackages);
+router.get('/packages/detail/:id', getPackageById);
 
 // Public routes
 router.get('/', getAllAgencies);

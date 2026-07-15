@@ -1,7 +1,5 @@
 import Review from '../models/Review.js';
 import Booking from '../models/Booking.js';
-import Agency from '../models/Agency.js';
-import TaxiProvider from '../models/TaxiProvider.js';
 import User from '../models/User.js';
 import TravelPackage from '../models/TravelPackage.js';
 
@@ -40,15 +38,15 @@ export const createReview = async (req, res) => {
       const pkg = await TravelPackage.findById(booking.packageOrServiceId);
       if (!pkg) {
         // Fallback or find agency directly if package deleted
-        const agency = await Agency.findOne({ _id: booking.packageOrServiceId });
-        agencyOrProviderId = agency ? agency.userId : null;
+        const agency = await User.findOne({ _id: booking.packageOrServiceId, role: 'agency' });
+        agencyOrProviderId = agency ? agency._id : null;
       } else {
         agencyOrProviderId = pkg.agencyId;
       }
       reviewType = 'agency';
     } else {
-      const taxi = await TaxiProvider.findById(booking.packageOrServiceId);
-      agencyOrProviderId = taxi ? taxi.userId : null;
+      // In the new architecture, packageOrServiceId is the taxi provider's user ID directly
+      agencyOrProviderId = booking.packageOrServiceId;
       reviewType = 'taxi';
     }
 
@@ -72,7 +70,7 @@ export const createReview = async (req, res) => {
       isApproved: true
     });
 
-    // Update ratings on Agency/TaxiProvider and User profiles
+    // Update ratings on Agency and User profiles
     const allReviews = await Review.find({ agencyOrProviderId });
     const count = allReviews.length;
     const avg = parseFloat((allReviews.reduce((sum, r) => sum + r.rating, 0) / count).toFixed(1));
@@ -82,19 +80,6 @@ export const createReview = async (req, res) => {
       averageRating: avg,
       totalReviews: count
     });
-
-    // Update specific role model
-    if (booking.bookingType === 'package') {
-      await Agency.findOneAndUpdate({ userId: agencyOrProviderId }, {
-        rating: avg,
-        reviewCount: count
-      });
-    } else {
-      await TaxiProvider.findOneAndUpdate({ userId: agencyOrProviderId }, {
-        rating: avg,
-        reviewCount: count
-      });
-    }
 
     // Also update booking status to mark reviewed (implied)
     res.status(201).json({

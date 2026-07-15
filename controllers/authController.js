@@ -1,7 +1,5 @@
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
-import Agency from '../models/Agency.js';
-import TaxiProvider from '../models/TaxiProvider.js';
 
 // Generate JWT token
 const generateToken = (id) => {
@@ -19,29 +17,20 @@ export const register = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Email already registered' });
     }
 
-    // Create user
-    const user = await User.create({ name, email, password, role, phone });
-
-    // Auto-create initial profile for agencies or taxi providers
-    if (role === 'agency') {
-      await Agency.create({
-        userId: user._id,
-        agencyName: `${user.name} Travel Agency`,
-        email: user.email,
-        phone: phone || '000-000-0000',
-        location: { country: '', city: '', address: '' },
-        isVerified: true
-      });
-    } else if (role === 'taxi_provider') {
-      await TaxiProvider.create({
-        userId: user._id,
-        businessName: `${user.name} Taxi Service`,
-        email: user.email,
-        phone: phone || '000-000-0000',
-        location: { country: '', city: '', address: '' },
-        isVerified: true
-      });
+    // Create user with initial fields
+    const userFields = { name, email, password, role, phone };
+    if (role === 'taxi_provider') {
+      userFields.businessName = `${name} Taxi Service`;
+      userFields.location = { country: '', city: '', address: '' };
+      userFields.isVerified = true;
+    } else if (role === 'agency') {
+      userFields.agencyName = `${name} Travel Agency`;
+      userFields.businessEmail = email;
+      userFields.location = { country: '', city: '', address: '' };
+      userFields.isVerified = true;
     }
+
+    const user = await User.create(userFields);
 
     const token = generateToken(user._id);
 
