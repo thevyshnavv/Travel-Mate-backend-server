@@ -67,3 +67,94 @@ export const getBookingCancellationTemplate = (travelerName, bookingNumber) => {
     </div>
   `;
 };
+
+/**
+ * Generates HTML email content for traveler payment success confirmation
+ */
+export const getTravelerPaymentSuccessTemplate = (travelerName, bookingNumber, totalPrice, bookingType, serviceName) => {
+  return `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+      <h2 style="color: #10B981; text-align: center;">Payment Confirmed & Booking Secured!</h2>
+      <p>Dear <strong>${travelerName}</strong>,</p>
+      <p>Thank you for your payment! We are pleased to confirm that your booking <strong>${bookingNumber}</strong> is now fully secured and confirmed.</p>
+      
+      <div style="background-color: #ECFDF5; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #10B981;">
+        <h4 style="margin-top: 0; color: #065F46;">Booking Details:</h4>
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 5px 0; color: #047857;">Booking Number:</td>
+            <td style="padding: 5px 0; text-align: right; font-weight: bold; color: #065F46;">${bookingNumber}</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0; color: #047857;">Booking Type:</td>
+            <td style="padding: 5px 0; text-align: right; font-weight: bold; color: #065F46; text-transform: capitalize;">${bookingType}</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0; color: #047857;">Service/Package Name:</td>
+            <td style="padding: 5px 0; text-align: right; font-weight: bold; color: #065F46;">${serviceName}</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0; color: #047857;">Amount Paid:</td>
+            <td style="padding: 5px 0; text-align: right; font-weight: bold; color: #065F46;">$${totalPrice}</td>
+          </tr>
+        </table>
+      </div>
+
+      <p>You can view your active bookings and details anytime from your dashboard profile.</p>
+
+      <p style="text-align: center; margin: 30px 0;">
+        <a href="http://localhost:5173/profile" style="background-color: #10B981; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">Go to Profile</a>
+      </p>
+
+      <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
+      <p style="font-size: 12px; color: #9CA3AF; text-align: center;">This is an automated notification. Please do not reply directly to this email.</p>
+    </div>
+  `;
+};
+
+/**
+ * Generates HTML email content for service provider (agency / taxi) new booking notice
+ */
+export const getProviderNewBookingTemplate = (providerName, travelerName, travelerEmail, travelerPhone, bookingNumber, totalPrice, bookingType, serviceName) => {
+  return `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
+      <h2 style="color: #3B82F6; text-align: center;">New Confirmed Booking Received!</h2>
+      <p>Dear <strong>${providerName}</strong>,</p>
+      <p>Great news! You have received a new confirmed booking. The customer has successfully paid, and the booking is secured.</p>
+      
+      <div style="background-color: #EFF6FF; padding: 15px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #3B82F6;">
+        <h4 style="margin-top: 0; color: #1E40AF;">Booking Summary:</h4>
+        <table style="width: 100%; border-collapse: collapse;">
+          <tr>
+            <td style="padding: 5px 0; color: #1D4ED8;">Booking Number:</td>
+            <td style="padding: 5px 0; text-align: right; font-weight: bold; color: #1E40AF;">${bookingNumber}</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0; color: #1D4ED8;">Service/Package Name:</td>
+            <td style="padding: 5px 0; text-align: right; font-weight: bold; color: #1E40AF;">${serviceName}</td>
+          </tr>
+          <tr>
+            <td style="padding: 5px 0; color: #1D4ED8;">Amount Collected:</td>
+            <td style="padding: 5px 0; text-align: right; font-weight: bold; color: #1E40AF;">$${totalPrice}</td>
+          </tr>
+        </table>
+      </div>
+
+      <div style="background-color: #F9FAFB; padding: 15px; border-radius: 6px; margin: 20px 0; border: 1px solid #E5E7EB;">
+        <h4 style="margin-top: 0; color: #374151;">Customer Contact Details:</h4>
+        <p style="margin: 5px 0;"><strong>Name:</strong> ${travelerName}</p>
+        <p style="margin: 5px 0;"><strong>Email:</strong> ${travelerEmail}</p>
+        <p style="margin: 5px 0;"><strong>Phone:</strong> ${travelerPhone || 'N/A'}</p>
+      </div>
+
+      <p>Please review this booking details and prepare for the service from your dashboard.</p>
+
+      <p style="text-align: center; margin: 30px 0;">
+        <a href="http://localhost:5173/profile" style="background-color: #3B82F6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">View Dashboard</a>
+      </p>
+
+      <hr style="border: 0; border-top: 1px solid #eee; margin: 30px 0;">
+      <p style="font-size: 12px; color: #9CA3AF; text-align: center;">This is an automated notification. Please do not reply directly to this email.</p>
+    </div>
+  `;
+};

@@ -2,6 +2,9 @@ import Razorpay from 'razorpay';
 import crypto from 'crypto';
 import Payment from '../models/Payment.js';
 import Booking from '../models/Booking.js';
+import User from '../models/User.js';
+import { sendEmail } from '../config/mailer.js';
+import { getTravelerPaymentSuccessTemplate, getProviderNewBookingTemplate } from '../utils/emailTemplates.js';
 
 // Helper to generate a unique payment number
 const generatePaymentNumber = () => {
@@ -110,7 +113,85 @@ export const verifyPayment = async (req, res) => {
 
     // 3. Update booking paymentStatus to 'Paid'
     if (bookingId) {
-      await Booking.findByIdAndUpdate(bookingId, { paymentStatus: 'Paid' });
+      const booking = await Booking.findById(bookingId)
+        .populate('travelerId')
+        .populate('packageOrServiceId');
+      
+      if (booking) {
+        booking.paymentStatus = 'Paid';
+        booking.status = 'Confirmed'; // Confirm the booking on payment
+        await booking.save();
+
+        // Prepare traveler and service details
+        const traveler = booking.travelerId;
+        const bookingType = booking.bookingType; // 'package' or 'taxi'
+        let serviceName = 'Booking Service';
+        let providerEmail = null;
+        let providerName = 'Service Provider';
+
+        if (bookingType === 'package') {
+          const pkg = booking.packageOrServiceId;
+          if (pkg) {
+            serviceName = pkg.packageName;
+            // Retrieve the agency User record using pkg.agencyId
+            const agencyUser = await User.findById(pkg.agencyId);
+            if (agencyUser) {
+              providerEmail = agencyUser.businessEmail || agencyUser.email;
+              providerName = agencyUser.agencyName || agencyUser.businessName || agencyUser.name;
+            }
+          }
+        } else if (bookingType === 'taxi') {
+          const taxiUser = booking.packageOrServiceId;
+          if (taxiUser) {
+            serviceName = taxiUser.businessName || taxiUser.name || 'Taxi Service';
+            providerEmail = taxiUser.businessEmail || taxiUser.email;
+            providerName = taxiUser.businessName || taxiUser.name;
+          }
+        }
+
+        // Send Email to Traveler
+        if (traveler && traveler.email) {
+          try {
+            const travelerHtml = getTravelerPaymentSuccessTemplate(
+              traveler.name,
+              booking.bookingNumber,
+              booking.totalPrice,
+              bookingType,
+              serviceName
+            );
+            await sendEmail(
+              traveler.email,
+              `Booking Confirmed & Paid: ${booking.bookingNumber}`,
+              travelerHtml
+            );
+          } catch (mailErr) {
+            console.error('[VerifyPayment Mail] Failed to send email to traveler:', mailErr.message);
+          }
+        }
+
+        // Send Email to Provider (Agency or Taxi Provider)
+        if (providerEmail) {
+          try {
+            const providerHtml = getProviderNewBookingTemplate(
+              providerName,
+              traveler ? traveler.name : 'A Traveler',
+              traveler ? traveler.email : 'N/A',
+              traveler ? traveler.phone : 'N/A',
+              booking.bookingNumber,
+              booking.totalPrice,
+              bookingType,
+              serviceName
+            );
+            await sendEmail(
+              providerEmail,
+              `New Paid Booking: ${booking.bookingNumber}`,
+              providerHtml
+            );
+          } catch (mailErr) {
+            console.error('[VerifyPayment Mail] Failed to send email to provider:', mailErr.message);
+          }
+        }
+      }
     }
 
     return res.status(200).json({
