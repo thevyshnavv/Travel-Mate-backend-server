@@ -59,6 +59,16 @@ const bookingSchema = new mongoose.Schema({
   specialRequests: {
     type: String,
     default: ''
+  },
+  assignedDriverId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'TaxiDriver',
+    default: null
+  },
+  assignedVehicleId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Fleet',
+    default: null
   }
 }, { timestamps: true });
 

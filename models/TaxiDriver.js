@@ -10,6 +10,10 @@ const taxiDriverSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Driver name is required']
   },
+  email: {
+    type: String,
+    required: [true, 'Driver email is required']
+  },
   phone: {
     type: String,
     required: [true, 'Driver phone is required']

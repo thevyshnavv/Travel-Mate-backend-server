@@ -114,8 +114,8 @@ const newTaxiProvidersData = [
         { model: 'Mercedes E-Class 2022', registrationNumber: 'LDN-02-LUX', capacity: 4, type: 'luxury' }
       ],
       drivers: [
-        { name: 'Arthur Pendelton', phone: '+44-7700-900077', licenseNumber: 'UK-DL-9988A', experience: 10 },
-        { name: 'Sarah Jenkins', phone: '+44-7700-900078', licenseNumber: 'UK-DL-4432B', experience: 4 }
+        { name: 'Arthur Pendelton', email: 'arthur.pendelton@example.com', phone: '+44-7700-900077', licenseNumber: 'UK-DL-9988A', experience: 10 },
+        { name: 'Sarah Jenkins', email: 'sarah.jenkins@example.com', phone: '+44-7700-900078', licenseNumber: 'UK-DL-4432B', experience: 4 }
       ],
       pricePerKm: 1.8,
       basePrice: 6.0,
@@ -148,8 +148,8 @@ const newTaxiProvidersData = [
         { model: 'Peugeot 5008 2022', registrationNumber: 'PA-500-PE', capacity: 7, type: 'suv' }
       ],
       drivers: [
-        { name: 'Jean Dupont', phone: '+33-6-1234-5678', licenseNumber: 'FR-DL-11223', experience: 8 },
-        { name: 'Marie Laurent', phone: '+33-6-9876-5432', licenseNumber: 'FR-DL-44556', experience: 6 }
+        { name: 'Jean Dupont', email: 'jean.dupont@example.com', phone: '+33-6-1234-5678', licenseNumber: 'FR-DL-11223', experience: 8 },
+        { name: 'Marie Laurent', email: 'marie.laurent@example.com', phone: '+33-6-9876-5432', licenseNumber: 'FR-DL-44556', experience: 6 }
       ],
       pricePerKm: 2.0,
       basePrice: 7.0,
@@ -182,8 +182,8 @@ const newTaxiProvidersData = [
         { model: 'Toyota Alphard 2023', registrationNumber: 'TK-99-AL', capacity: 7, type: 'minivan' }
       ],
       drivers: [
-        { name: 'Kenji Takahashi', phone: '+81-90-1234-5678', licenseNumber: 'JP-DL-88776', experience: 12 },
-        { name: 'Yoko Tanaka', phone: '+81-90-8765-4321', licenseNumber: 'JP-DL-55443', experience: 5 }
+        { name: 'Kenji Takahashi', email: 'kenji.takahashi@example.com', phone: '+81-90-1234-5678', licenseNumber: 'JP-DL-88776', experience: 12 },
+        { name: 'Yoko Tanaka', email: 'yoko.tanaka@example.com', phone: '+81-90-8765-4321', licenseNumber: 'JP-DL-55443', experience: 5 }
       ],
       pricePerKm: 3.5,
       basePrice: 8.0,
@@ -216,8 +216,8 @@ const newTaxiProvidersData = [
         { model: 'Kia Carnival 2022', registrationNumber: 'SYD-444-VAN', capacity: 7, type: 'minivan' }
       ],
       drivers: [
-        { name: 'Bruce Miller', phone: '+61-412-345-678', licenseNumber: 'AU-DL-1234A', experience: 7 },
-        { name: 'Chloe Davis', phone: '+61-412-987-654', licenseNumber: 'AU-DL-5678B', experience: 9 }
+        { name: 'Bruce Miller', email: 'bruce.miller@example.com', phone: '+61-412-345-678', licenseNumber: 'AU-DL-1234A', experience: 7 },
+        { name: 'Chloe Davis', email: 'chloe.davis@example.com', phone: '+61-412-987-654', licenseNumber: 'AU-DL-5678B', experience: 9 }
       ],
       pricePerKm: 2.2,
       basePrice: 6.5,
@@ -250,8 +250,8 @@ const newTaxiProvidersData = [
         { model: 'Ford Explorer 2023', registrationNumber: 'TO-998-FD', capacity: 7, type: 'suv' }
       ],
       drivers: [
-        { name: 'Robert Chen', phone: '+1-647-555-0101', licenseNumber: 'CA-ON-7788', experience: 6 },
-        { name: 'Emily Wong', phone: '+1-647-555-0102', licenseNumber: 'CA-ON-9900', experience: 3 }
+        { name: 'Robert Chen', email: 'robert.chen@example.com', phone: '+1-647-555-0101', licenseNumber: 'CA-ON-7788', experience: 6 },
+        { name: 'Emily Wong', email: 'emily.wong@example.com', phone: '+1-647-555-0102', licenseNumber: 'CA-ON-9900', experience: 3 }
       ],
       pricePerKm: 1.6,
       basePrice: 5.5,
@@ -284,8 +284,8 @@ const newTaxiProvidersData = [
         { model: 'Nissan Patrol 2023', registrationNumber: 'DXB-02-SUV', capacity: 7, type: 'suv' }
       ],
       drivers: [
-        { name: 'Ahmed Ali', phone: '+971-50-111-2222', licenseNumber: 'UAE-DXB-909', experience: 15 },
-        { name: 'Rajesh Kumar', phone: '+971-50-333-4444', licenseNumber: 'UAE-DXB-808', experience: 8 }
+        { name: 'Ahmed Ali', email: 'ahmed.ali@example.com', phone: '+971-50-111-2222', licenseNumber: 'UAE-DXB-909', experience: 15 },
+        { name: 'Rajesh Kumar', email: 'rajesh.kumar@example.com', phone: '+971-50-333-4444', licenseNumber: 'UAE-DXB-808', experience: 8 }
       ],
       pricePerKm: 2.5,
       basePrice: 12.0,
@@ -318,8 +318,8 @@ const newTaxiProvidersData = [
         { model: 'Toyota Corolla 2022', registrationNumber: 'CA-54321', capacity: 4, type: 'sedan' }
       ],
       drivers: [
-        { name: 'Sipho Ncube', phone: '+27-82-555-0199', licenseNumber: 'ZA-DL-88997', experience: 5 },
-        { name: 'Johan de Wet', phone: '+27-82-555-0200', licenseNumber: 'ZA-DL-22334', experience: 11 }
+        { name: 'Sipho Ncube', email: 'sipho.ncube@example.com', phone: '+27-82-555-0199', licenseNumber: 'ZA-DL-88997', experience: 5 },
+        { name: 'Johan de Wet', email: 'johan.dewet@example.com', phone: '+27-82-555-0200', licenseNumber: 'ZA-DL-22334', experience: 11 }
       ],
       pricePerKm: 1.2,
       basePrice: 4.5,
@@ -352,8 +352,8 @@ const newTaxiProvidersData = [
         { model: 'Mercedes Vito 2022', registrationNumber: 'RM-889-IT', capacity: 8, type: 'minivan' }
       ],
       drivers: [
-        { name: 'Francesco Rossi', phone: '+39-333-123456', licenseNumber: 'IT-RM-99008', experience: 14 },
-        { name: 'Giulia Bianchi', phone: '+39-333-987654', licenseNumber: 'IT-RM-11223', experience: 7 }
+        { name: 'Francesco Rossi', email: 'francesco.rossi@example.com', phone: '+39-333-123456', licenseNumber: 'IT-RM-99008', experience: 14 },
+        { name: 'Giulia Bianchi', email: 'giulia.bianchi@example.com', phone: '+39-333-987654', licenseNumber: 'IT-RM-11223', experience: 7 }
       ],
       pricePerKm: 1.9,
       basePrice: 6.0,
@@ -386,8 +386,8 @@ const newTaxiProvidersData = [
         { model: 'Toyota Alphard 2024', registrationNumber: 'SHB-8888-G', capacity: 6, type: 'luxury' }
       ],
       drivers: [
-        { name: 'Lim Wei Jie', phone: '+65-9123-4567', licenseNumber: 'SG-DL-776655', experience: 9 },
-        { name: 'Nurul Huda', phone: '+65-9876-5432', licenseNumber: 'SG-DL-334455', experience: 6 }
+        { name: 'Lim Wei Jie', email: 'lim.weijie@example.com', phone: '+65-9123-4567', licenseNumber: 'SG-DL-776655', experience: 9 },
+        { name: 'Nurul Huda', email: 'nurul.huda@example.com', phone: '+65-9876-5432', licenseNumber: 'SG-DL-334455', experience: 6 }
       ],
       pricePerKm: 1.5,
       basePrice: 5.0,
@@ -420,8 +420,8 @@ const newTaxiProvidersData = [
         { model: 'Hyundai H1 2022', registrationNumber: 'CR-220-EG', capacity: 8, type: 'minivan' }
       ],
       drivers: [
-        { name: 'Mostafa Mahmoud', phone: '+20-100-123-4567', licenseNumber: 'EG-DL-9988', experience: 11 },
-        { name: 'Ibrahim Hassan', phone: '+20-100-987-6543', licenseNumber: 'EG-DL-7766', experience: 8 }
+        { name: 'Mostafa Mahmoud', email: 'mostafa.mahmoud@example.com', phone: '+20-100-123-4567', licenseNumber: 'EG-DL-9988', experience: 11 },
+        { name: 'Ibrahim Hassan', email: 'ibrahim.hassan@example.com', phone: '+20-100-987-6543', licenseNumber: 'EG-DL-7766', experience: 8 }
       ],
       pricePerKm: 1.0,
       basePrice: 4.0,
@@ -1094,6 +1094,7 @@ const seedDB = async () => {
 
     await getOrCreateTaxiDriver({
       name: 'David Smith',
+      email: 'david.smith@example.com',
       phone: '555-0988',
       licenseNumber: 'DL-883344',
       experience: 5,

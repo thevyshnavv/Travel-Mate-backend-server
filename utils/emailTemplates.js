@@ -71,7 +71,7 @@ export const getBookingCancellationTemplate = (travelerName, bookingNumber) => {
 /**
  * Generates HTML email content for traveler payment success confirmation
  */
-export const getTravelerPaymentSuccessTemplate = (travelerName, bookingNumber, totalPrice, bookingType, serviceName) => {
+export const getTravelerPaymentSuccessTemplate = (travelerName, bookingNumber, totalPrice, bookingType, serviceName, driverName = null, driverEmail = null, driverPhone = null, vehicleDetails = null) => {
   return `
     <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; border: 1px solid #ddd; padding: 20px; border-radius: 8px;">
       <h2 style="color: #10B981; text-align: center;">Payment Confirmed & Booking Secured!</h2>
@@ -99,6 +99,16 @@ export const getTravelerPaymentSuccessTemplate = (travelerName, bookingNumber, t
           </tr>
         </table>
       </div>
+
+      ${driverName ? `
+      <div style="background-color: #F9FAFB; padding: 15px; border-radius: 6px; margin: 20px 0; border: 1px solid #E5E7EB;">
+        <h4 style="margin-top: 0; color: #374151;">Assigned Driver Details:</h4>
+        <p style="margin: 5px 0;"><strong>Driver Name:</strong> ${driverName}</p>
+        <p style="margin: 5px 0;"><strong>Driver Email:</strong> ${driverEmail || 'N/A'}</p>
+        <p style="margin: 5px 0;"><strong>Driver Phone:</strong> ${driverPhone || 'N/A'}</p>
+        ${vehicleDetails ? `<p style="margin: 5px 0;"><strong>Vehicle Details:</strong> ${vehicleDetails}</p>` : ''}
+      </div>
+      ` : ''}
 
       <p>You can view your active bookings and details anytime from your dashboard profile.</p>
 

@@ -239,7 +239,7 @@ export const addVehicle = async (req, res) => {
 // @access Private (owner only)
 export const addDriver = async (req, res) => {
   try {
-    const { name, phone, licenseNumber, experience, image } = req.body;
+    const { name, email, phone, licenseNumber, experience, image } = req.body;
 
     if (req.params.id.toString() !== req.user.id.toString()) {
       return res.status(403).json({ success: false, message: 'Not authorized' });
@@ -248,6 +248,7 @@ export const addDriver = async (req, res) => {
     await TaxiDriver.create({
       providerId: req.user.id,
       name,
+      email,
       phone,
       licenseNumber,
       experience,
