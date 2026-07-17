@@ -1,7 +1,7 @@
 import Booking from '../models/Booking.js';
 import TravelPackage from '../models/TravelPackage.js';
 import User from '../models/User.js';
-import { assignVehicleAndDriver } from '../utils/assignmentHelper.js';
+import { assignVehicleAndDriver, assignGuide } from '../utils/assignmentHelper.js';
 
 // @route  POST /api/v1/bookings
 // @access Private (traveler role)
@@ -18,6 +18,7 @@ export const createBooking = async (req, res) => {
 
     let assignedVehicleId = null;
     let assignedDriverId = null;
+    let assignedGuideId = null;
 
     if (bookingType === 'taxi') {
       try {
@@ -29,6 +30,20 @@ export const createBooking = async (req, res) => {
         assignedDriverId = assignment.driver._id;
       } catch (err) {
         return res.status(400).json({ success: false, message: err.message || 'No driver or vehicle is available for the selected schedule.' });
+      }
+    } else if (bookingType === 'package') {
+      try {
+        const travelPackage = await TravelPackage.findById(packageOrServiceId);
+        if (!travelPackage) {
+          return res.status(404).json({ success: false, message: 'Travel package not found' });
+        }
+        const guide = await assignGuide(travelPackage.agencyId, packageOrServiceId, bookingDate);
+        if (!guide) {
+          return res.status(400).json({ success: false, message: 'No guide is available for the selected travel date and schedule.' });
+        }
+        assignedGuideId = guide._id;
+      } catch (err) {
+        return res.status(400).json({ success: false, message: err.message || 'No guide is available for the selected travel date and schedule.' });
       }
     }
 
@@ -46,14 +61,16 @@ export const createBooking = async (req, res) => {
       paymentStatus: 'Pending',
       status: 'Pending',
       assignedVehicleId,
-      assignedDriverId
+      assignedDriverId,
+      assignedGuideId
     });
 
     const populatedBooking = await Booking.findById(booking._id)
       .populate('travelerId', 'name email phone avatar')
       .populate('packageOrServiceId')
       .populate('assignedDriverId')
-      .populate('assignedVehicleId');
+      .populate('assignedVehicleId')
+      .populate('assignedGuideId');
 
     if (bookingType === 'taxi') {
       const taxiProvider = await User.findById(packageOrServiceId);
@@ -101,6 +118,7 @@ export const getMyBookings = async (req, res) => {
         .populate('packageOrServiceId')
         .populate('assignedDriverId')
         .populate('assignedVehicleId')
+        .populate('assignedGuideId')
         .sort({ createdAt: -1 });
     } else if (role === 'agency') {
       // Find bookings for packages belonging to this agency (using agency's userId)
@@ -110,6 +128,7 @@ export const getMyBookings = async (req, res) => {
       bookings = await Booking.find({ packageOrServiceId: { $in: packageIds } })
         .populate('travelerId', 'name email phone avatar')
         .populate('packageOrServiceId')
+        .populate('assignedGuideId')
         .sort({ createdAt: -1 });
     } else if (role === 'taxi_provider') {
       // Find bookings for this taxi provider (where packageOrServiceId is the provider user ID)

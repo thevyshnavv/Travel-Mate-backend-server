@@ -69,6 +69,11 @@ const bookingSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Fleet',
     default: null
+  },
+  assignedGuideId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Guide',
+    default: null
   }
 }, { timestamps: true });
 

@@ -1,6 +1,8 @@
 import Booking from '../models/Booking.js';
 import Fleet from '../models/Fleet.js';
 import TaxiDriver from '../models/TaxiDriver.js';
+import Guide from '../models/Guide.js';
+import TravelPackage from '../models/TravelPackage.js';
 
 const RIDE_DURATION_MS = 2 * 60 * 60 * 1000; // 2 hours
 
@@ -87,4 +89,91 @@ export const assignVehicleAndDriver = async (providerId, bookingDate) => {
   }
 
   return null; // No available vehicle and driver pair for this schedule
+};
+
+/**
+ * Automatically assigns the next available guide for a travel package booking.
+ * Follows a sequential (round-robin/FIFO) order.
+ * Ensures no overlapping bookings exist within the travel package's duration_days range.
+ * 
+ * @param {string} agencyId - The travel agency User ID
+ * @param {string} packageId - The booked travel package ID
+ * @param {string|Date} bookingDate - The requested start date of the package tour
+ * @returns {Promise<Object|null>} - The assigned guide, or null if none are available.
+ */
+export const assignGuide = async (agencyId, packageId, bookingDate) => {
+  const pkg = await TravelPackage.findById(packageId);
+  if (!pkg) {
+    throw new Error('Travel package not found.');
+  }
+
+  const duration_days = pkg.duration_days || 1;
+
+  // Retrieve active guides for the agency, sorted by creation date
+  const guides = await Guide.find({ agencyId, status: 'Active' }).sort({ createdAt: 1 });
+
+  if (!guides || guides.length === 0) {
+    throw new Error('No active guides registered for this travel agency.');
+  }
+
+  // Find all packages belonging to this agency
+  const agencyPackages = await TravelPackage.find({ agencyId }).select('_id');
+  const agencyPackageIds = agencyPackages.map(p => p._id);
+
+  // Find the last booking for this agency's packages that had a guide assigned
+  const lastBooking = await Booking.findOne({
+    bookingType: 'package',
+    packageOrServiceId: { $in: agencyPackageIds },
+    assignedGuideId: { $ne: null }
+  }).sort({ createdAt: -1 });
+
+  let lastGuideIdx = -1;
+  if (lastBooking) {
+    lastGuideIdx = guides.findIndex(g => g._id.toString() === lastBooking.assignedGuideId.toString());
+  }
+
+  // Next in sequence starts from (last + 1)
+  let currGuideIdx = (lastGuideIdx + 1) % guides.length;
+
+  // Normalize dates to start of day for check
+  const S_new = new Date(bookingDate);
+  S_new.setHours(0, 0, 0, 0);
+  const E_new = new Date(S_new.getTime() + duration_days * 24 * 60 * 60 * 1000);
+
+  let attempts = 0;
+  while (attempts < guides.length) {
+    const candidateGuide = guides[currGuideIdx];
+
+    // Check if candidate guide has any overlapping active bookings
+    const existBookings = await Booking.find({
+      bookingType: 'package',
+      assignedGuideId: candidateGuide._id,
+      status: { $nin: ['Cancelled', 'cancelled'] }
+    }).populate('packageOrServiceId');
+
+    let overlaps = false;
+    for (const eb of existBookings) {
+      if (!eb.packageOrServiceId) continue;
+      const S_exist = new Date(eb.bookingDate);
+      S_exist.setHours(0, 0, 0, 0);
+      const D_exist = eb.packageOrServiceId.duration_days || 1;
+      const E_exist = new Date(S_exist.getTime() + D_exist * 24 * 60 * 60 * 1000);
+
+      // Overlap check: S_new < E_exist && S_exist < E_new
+      if (S_new < E_exist && S_exist < E_new) {
+        overlaps = true;
+        break;
+      }
+    }
+
+    if (!overlaps) {
+      return candidateGuide;
+    }
+
+    // Sequentially move to the next guide in round-robin order
+    currGuideIdx = (currGuideIdx + 1) % guides.length;
+    attempts++;
+  }
+
+  return null; // No guide is available for this schedule
 };

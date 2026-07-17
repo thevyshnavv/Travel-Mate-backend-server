@@ -12,7 +12,11 @@ import {
   deletePackage,
   updatePackage,
   getAllPackages,
-  getPackageById
+  getPackageById,
+  createGuide,
+  getMyGuides,
+  updateGuide,
+  deleteGuide
 } from '../controllers/agencyController.js';
 import { protect, authorize } from '../middleware/authMiddleware.js';
 import upload from '../middleware/upload.js';
@@ -39,5 +43,11 @@ router.post('/packages', protect, authorize('agency'), upload.array('images', 5)
 router.get('/packages/my-packages', protect, authorize('agency'), getMyPackages);
 router.put('/packages/:id', protect, authorize('agency'), upload.array('images', 5), updatePackage);
 router.delete('/packages/:id', protect, authorize('agency'), deletePackage);
+
+// Guide routes
+router.post('/guides', protect, authorize('agency'), createGuide);
+router.get('/guides', protect, authorize('agency'), getMyGuides);
+router.put('/guides/:id', protect, authorize('agency'), updateGuide);
+router.delete('/guides/:id', protect, authorize('agency'), deleteGuide);
 
 export default router;

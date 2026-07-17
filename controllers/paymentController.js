@@ -117,7 +117,8 @@ export const verifyPayment = async (req, res) => {
         .populate('travelerId')
         .populate('packageOrServiceId')
         .populate('assignedDriverId')
-        .populate('assignedVehicleId');
+        .populate('assignedVehicleId')
+        .populate('assignedGuideId');
       
       if (booking) {
         booking.paymentStatus = 'Paid';
@@ -163,7 +164,10 @@ export const verifyPayment = async (req, res) => {
               booking.assignedDriverId?.name,
               booking.assignedDriverId?.email,
               booking.assignedDriverId?.phone,
-              booking.assignedVehicleId ? `${booking.assignedVehicleId.model} (${booking.assignedVehicleId.registrationNumber})` : null
+              booking.assignedVehicleId ? `${booking.assignedVehicleId.model} (${booking.assignedVehicleId.registrationNumber})` : null,
+              booking.assignedGuideId?.name,
+              booking.assignedGuideId?.email,
+              booking.assignedGuideId?.phone
             );
             await sendEmail(
               traveler.email,

@@ -1,5 +1,6 @@
 import User from '../models/User.js';
 import TravelPackage from '../models/TravelPackage.js';
+import Guide from '../models/Guide.js';
 
 // Helper function to build the agency response object expected by the UI
 const buildAgencyResponse = (user) => {
@@ -374,6 +375,105 @@ export const getPackageById = async (req, res) => {
       success: true, 
       package: pkg,
       agency
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// @route  POST /api/v1/agencies/guides
+// @access Private (agency role only)
+export const createGuide = async (req, res) => {
+  try {
+    const { name, email, phone, status } = req.body;
+
+    if (!name || !email || !phone) {
+      return res.status(400).json({ success: false, message: 'Please provide all required fields' });
+    }
+
+    const guide = await Guide.create({
+      agencyId: req.user.id,
+      name,
+      email,
+      phone,
+      status: status || 'Active'
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Guide registered successfully',
+      guide
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// @route  GET /api/v1/agencies/guides
+// @access Private (agency role only)
+export const getMyGuides = async (req, res) => {
+  try {
+    const guides = await Guide.find({ agencyId: req.user.id }).sort({ createdAt: -1 });
+
+    res.status(200).json({
+      success: true,
+      guides
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// @route  PUT /api/v1/agencies/guides/:id
+// @access Private (agency role only)
+export const updateGuide = async (req, res) => {
+  try {
+    const { name, email, phone, status } = req.body;
+
+    let guide = await Guide.findById(req.params.id);
+    if (!guide) {
+      return res.status(404).json({ success: false, message: 'Guide not found' });
+    }
+
+    if (guide.agencyId.toString() !== req.user.id.toString()) {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+
+    if (name) guide.name = name;
+    if (email) guide.email = email;
+    if (phone) guide.phone = phone;
+    if (status) guide.status = status;
+
+    await guide.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Guide updated successfully',
+      guide
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// @route  DELETE /api/v1/agencies/guides/:id
+// @access Private (agency role only)
+export const deleteGuide = async (req, res) => {
+  try {
+    let guide = await Guide.findById(req.params.id);
+    if (!guide) {
+      return res.status(404).json({ success: false, message: 'Guide not found' });
+    }
+
+    if (guide.agencyId.toString() !== req.user.id.toString()) {
+      return res.status(403).json({ success: false, message: 'Not authorized' });
+    }
+
+    await Guide.findByIdAndDelete(req.params.id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Guide deleted successfully'
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
