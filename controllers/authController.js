@@ -34,19 +34,28 @@ export const register = async (req, res) => {
 
     const token = generateToken(user._id);
 
-    res.status(201).json({
-      success: true,
-      message: 'Registration successful',
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone,
-        role: user.role,
-        avatar: user.avatar,
-      },
-    });
+    const cookieOptions = {
+      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+    };
+
+    res.status(201)
+      .cookie('token', token, cookieOptions)
+      .json({
+        success: true,
+        message: 'Registration successful',
+        token,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone,
+          role: user.role,
+          avatar: user.avatar,
+        },
+      });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }
@@ -71,19 +80,47 @@ export const login = async (req, res) => {
 
     const token = generateToken(user._id);
 
+    const cookieOptions = {
+      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+    };
+
+    res.status(200)
+      .cookie('token', token, cookieOptions)
+      .json({
+        success: true,
+        message: 'Login successful',
+        token,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          phone: user.phone || '',
+          bio: user.bio || '',
+          role: user.role,
+          avatar: user.avatar,
+        },
+      });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// @route  POST /api/v1/auth/logout
+export const logout = async (req, res) => {
+  try {
+    res.cookie('token', 'none', {
+      expires: new Date(Date.now() + 10 * 1000),
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+    });
+
     res.status(200).json({
       success: true,
-      message: 'Login successful',
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        phone: user.phone || '',
-        bio: user.bio || '',
-        role: user.role,
-        avatar: user.avatar,
-      },
+      message: 'Logged out successfully',
     });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });

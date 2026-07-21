@@ -8,6 +8,7 @@ import { Server } from 'socket.io';
 import connectDB from './config/db.js';
 import { initPaymentReminderJob } from './jobs/reminderJob.js';
 import { initCancelBookingJob } from './jobs/cancelBookingJob.js';
+import cookieParser from 'cookie-parser';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import agencyRoutes from './routes/agencyRoutes.js';
@@ -51,7 +52,11 @@ io.on('connection', (socket) => {
   });
 });
 
-app.use(cors());
+app.use(cors({
+  origin: ['http://localhost:5173', 'http://127.0.0.1:5173'],
+  credentials: true
+}));
+app.use(cookieParser());
 app.use(express.json());
 
 // Serve static uploads
